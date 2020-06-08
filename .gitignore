@@ -1,0 +1,10 @@
+node_modules/
+out/
+docker-compose.yml
+Dockerfile
+package-lock.json
+.vscode
+.nyc_output
+.devcontainer
+coverage
+*.vsix

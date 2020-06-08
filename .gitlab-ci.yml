@@ -1,0 +1,26 @@
+image: "node:current-buster-slim"
+
+
+stages:
+  - test
+  - publish
+
+
+test:
+    stage: test
+    script:
+        - npm install
+        - npm run coverage
+    coverage:
+        '/Statements.*?(\d+(?:\.\d+)?)%/'
+
+
+publish:
+    stage: publish
+    script:
+        - npm i -g vsce
+        - npm run publish
+    only:
+        - tags
+    except:
+        - branches

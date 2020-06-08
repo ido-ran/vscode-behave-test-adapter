@@ -1,0 +1,94 @@
+{
+  "name": "vscode-behave-test-adapter",
+  "displayName": "Behave Test Explorer",
+  "description": "Run your Behave tests in the Sidebar of Visual Studio Code",
+  "author": "Hyuksang Gwon <gwonhyuksang@gmail.com>",
+  "publisher": "gwonhs",
+  "version": "0.0.4",
+  "license": "MIT",
+  "preview": true,
+  "homepage": "https://gitlab.com/gwonhs/vscode-behave-test-adapter",
+  "badges": [
+    {
+      "description": "pipeline",
+      "url": "https://gitlab.com/gwonhs/vscode-behave-test-adapter/badges/master/pipeline.svg",
+      "href": "https://gitlab.com/gwonhs/vscode-behave-test-adapter/-/commits/master"
+    },
+    {
+      "description": "coverage",
+      "url": "https://gitlab.com/gwonhs/vscode-behave-test-adapter/badges/master/coverage.svg",
+      "href": "https://gitlab.com/gwonhs/vscode-behave-test-adapter/-/commits/master"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/gwonhs/vscode-behave-test-adapter"
+  },
+  "bugs": {
+    "url": "https://gitlab.com/gwonhs/vscode-behave-test-adapter/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "test",
+    "testing"
+  ],
+  "main": "out/main.js",
+  "scripts": {
+    "clean": "rimraf out *.vsix",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "./node_modules/.bin/mocha",
+    "coverage": "./node_modules/.bin/nyc npm run test",
+    "rebuild": "npm run clean && npm run build",
+    "package": "vsce package",
+    "publish": "vsce publish patch --baseImagesUrl https://gitlab.com/gwonhs/vscode-behave-test-adapter/-/raw/master"
+  },
+  "dependencies": {
+    "@types/mocha": "^7.0.2",
+    "child_process": "^1.0.2",
+    "fast-glob": "^3.2.2",
+    "path": "^0.12.7",
+    "tslib": "^1.13.0",
+    "vscode-test-adapter-api": "^1.9.0",
+    "vscode-test-adapter-util": "^0.7.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "~1.23.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^7.2.0",
+    "nyc": "^15.1.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.5",
+    "vsce": "^1.76.0"
+  },
+  "engines": {
+    "vscode": "^1.23.0"
+  },
+  "extensionDependencies": [
+    "hbenl.vscode-test-explorer"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Behave Test Explorer configuration",
+      "properties": {
+        "behaveExplorer.logpanel": {
+          "description": "write diagnotic logs to an output panel",
+          "type": "boolean",
+          "scope": "resource"
+        },
+        "behaveExplorer.logfile": {
+          "description": "write diagnostic logs to the given file",
+          "type": "string",
+          "scope": "resource"
+        }
+      }
+    }
+  }
+}
