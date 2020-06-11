@@ -1,0 +1,17 @@
+Title
+
+
+# Close|Fix|Resolve|Implement https://gitlab.com/gwonhs/vscode-behave-test-adapter/-/issues/NUM
+#
+# Problem
+# *
+#
+# Solution
+# *
+#
+# Concerns
+# *
+#
+# Note
+# *
+
