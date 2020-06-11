@@ -31,7 +31,7 @@ const grepTestSuite = (text: string): Option<TestSuiteInfo> => {
     return {
         type: "suite" as const,
         id: feature,
-        label: "Feature: " + feature,
+        label: "F: " + feature,
         children: testsFrom(feature, text)
     }
 }
@@ -56,14 +56,25 @@ const testsFrom = (feature: string, text: string) =>
 const testsFromLines = (feature: string, lines: string[]): TestInfo[] => {
 
     const scenarios = filterMap<string, string>(lines, grepScenario);
+    const scenariosOutlines = filterMap<string, string>(lines, grepScenarioOutline);
 
-    return scenarios.map(s => {
+    const scenarioTests = scenarios.map(s => {
         return {
             type: "test" as const,
             id: `${feature}:${s}`,
-            label: "Scenario: " + s
+            label: "S: " + s
         }
-    });
+    })
+
+    const scenarioOutlineTests = scenariosOutlines.map(s => {
+        return {
+            type: "test" as const,
+            id: `${feature}:${s}`,
+            label: "SO: " + s
+        }
+    })
+
+    return scenarioTests.concat(scenarioOutlineTests)
 }
 
 
@@ -93,8 +104,9 @@ function filter<T>(arr: Option<T>[]): T[] {
 
 const grepFeature = (line: string) => grepPattern(line, "Feature:")
 
-
 const grepScenario = (line: string) => grepPattern(line, "Scenario:")
+
+const grepScenarioOutline = (line: string) => grepPattern(line, "Scenario Outline:")
 
 
 const grepPattern = (line: string, pattern: string): Option<string> => {
@@ -108,5 +120,5 @@ const grepPattern = (line: string, pattern: string): Option<string> => {
 }
 
 
-export { grepFeature, grepScenario, filter, grepTestSuite };
+export { grepFeature, grepScenario, grepScenarioOutline, filter, grepTestSuite };
 export default loadTestSuite;

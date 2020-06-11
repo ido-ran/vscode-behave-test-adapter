@@ -1,12 +1,16 @@
 from behave import given, when, then
 
 
-@given('good scenario')
+@given('a good scenario')
+def given_good_scenario(context):
+    context.ok = True
+
+@given('a good scenario outline')
 def given_good_scenario(context):
     context.ok = True
 
 
-@given('bad scenario')
+@given('a bad scenario')
 def given_bad_scenario(context):
     context.ok = False
 

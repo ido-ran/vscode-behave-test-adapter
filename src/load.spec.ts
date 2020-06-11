@@ -28,11 +28,29 @@ describe('grepScenario()', () => {
         {in: 'Scenario:scenario A', out: 'scenario A'},
         {in: '  Scenario:  scenario A  ', out: 'scenario A'},
         {in: 'Scena: scenario A ', out: undefined},
+        {in: 'Scenario Outline: scenario A ', out: undefined},
     ];
     runs.forEach(run => {
         context('when input is ' + run.in, () => {
             it('should grep ' + run.out, () =>
                 expect(load.grepScenario(run.in)).to.equal(run.out)
+            );
+        })
+    });
+});
+
+describe('grepScenarioOutline:()', () => {
+    var runs = [
+        {in: '  Scenario Outline: scenario A', out: 'scenario A'},
+        {in: 'Scenario Outline:scenario A', out: 'scenario A'},
+        {in: '  Scenario Outline:  scenario A  ', out: 'scenario A'},
+        {in: 'Scena: scenario A ', out: undefined},
+        {in: 'Scenario: scenario A ', out: undefined},
+    ];
+    runs.forEach(run => {
+        context('when input is ' + run.in, () => {
+            it('should grep ' + run.out, () =>
+                expect(load.grepScenarioOutline(run.in)).to.equal(run.out)
             );
         })
     });
@@ -71,17 +89,17 @@ describe('testSuiteFrom()', () => {
         const expected: TestSuiteInfo = {
             type: 'suite' as const,
             id: 'feature A',
-            label: 'Feature: feature A',
+            label: 'F: feature A',
             children: [
                 {
                     type: 'test',
                     id: 'feature A:scenario A',
-                    label: 'Scenario: scenario A'
+                    label: 'S: scenario A'
                 },
                 {
                     type: 'test',
                     id: 'feature A:scenario B',
-                    label: 'Scenario: scenario B'
+                    label: 'S: scenario B'
                 }
             ]
         };

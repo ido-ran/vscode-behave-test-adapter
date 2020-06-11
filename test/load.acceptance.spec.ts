@@ -20,17 +20,22 @@ describe('loadTestSuite()', function () {
                             {
                                 type: 'suite' as const,
                                 id: 'fake feature',
-                                label: 'Feature: fake feature',
+                                label: 'F: fake feature',
                                 children: [
                                     {
                                         type: 'test',
-                                        id: 'fake feature:success',
-                                        label: 'Scenario: success'
+                                        id: 'fake feature:successful scenario',
+                                        label: 'S: successful scenario'
                                     },
                                     {
                                         type: 'test',
-                                        id: 'fake feature:fail',
-                                        label: 'Scenario: fail'
+                                        id: 'fake feature:failing scenario',
+                                        label: 'S: failing scenario'
+                                    },
+                                    {
+                                        type: 'test',
+                                        id: 'fake feature:successful scenario outline',
+                                        label: 'SO: successful scenario outline'
                                     },
                                 ]
                             }
