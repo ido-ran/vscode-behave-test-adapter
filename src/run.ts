@@ -4,6 +4,7 @@ import { Option, AllTest, TestEventsAfterLoad } from "./types";
 
 
 const runTestSuite = async (
+	pythonExec: string,
 	testSuite: TestSuiteInfo,
 	tests: string[],
 	testStatesEmitter: vscode.EventEmitter<TestEventsAfterLoad>,
@@ -14,13 +15,14 @@ const runTestSuite = async (
 	tests.forEach( async name => {
 		let node = findNode(testSuite, name);
 		if (node != undefined) {
-			await runTest(node, testStatesEmitter, output, featureDir)
+			await runTest(pythonExec, node, testStatesEmitter, output, featureDir)
 		}
 	})
 }
 
 
 const runTest = async (
+	pythonExec: string,
 	node: AllTest,
 	testStatesEmitter: vscode.EventEmitter<TestEventsAfterLoad>,
 	output: vscode.OutputChannel,
@@ -32,7 +34,7 @@ const runTest = async (
 		testStatesEmitter.fire(<TestSuiteEvent>{ type: "suite", suite: node.id, state: "running" });
 
 		for (const child of node.children) {
-			await runTest(child, testStatesEmitter, output, featureDir);
+			await runTest(pythonExec, child, testStatesEmitter, output, featureDir);
 		}
 
 		testStatesEmitter.fire(<TestSuiteEvent>{ type: "suite", suite: node.id, state: "completed" });
@@ -44,12 +46,16 @@ const runTest = async (
 		const { spawn } = require("child_process");
 
 		const child = await spawn(
-			"behave", [ "-n", node.id.split(":")[1] ], {
+			pythonExec, [ "-m", "behave", node.file, "-n", node.id.split(":")[1] ], {
 			cwd: featureDir
 		});
 
 		var so = "";
 		for await (const data of child.stdout) {
+			so += data
+		};
+
+		for await (const data of child.stderr) {
 			so += data
 		};
 

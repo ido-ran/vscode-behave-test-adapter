@@ -40,14 +40,15 @@ export class BehaveAdapter implements TestAdapter {
 
 		this.testsEmitter.fire(<TestLoadStartedEvent>{ type: "started" });
 
-		this.featureDir = await findFeatureRoot(this.workspace.uri.fsPath);
+		const workspaceRoot = this.workspace.uri.fsPath;
+		this.featureDir = await findFeatureRoot(workspaceRoot);
 
 		if (this.featureDir === undefined) {
 			return await this.fire_test_not_found();
 		}
 
 		try {
-			this.testSuite = await loadTestSuite(this.featureDir);
+			this.testSuite = await loadTestSuite(workspaceRoot, this.featureDir);
 
 			if (this.testSuite === undefined) {
 				return await this.fire_test_not_found();
@@ -60,9 +61,30 @@ export class BehaveAdapter implements TestAdapter {
 
 	}
 
+	async getPythonExecutable(): Promise<string | undefined> {
+		const extension = vscode.extensions.getExtension('ms-python.python')!;
+		const usingNewInterpreterStorage = extension.packageJSON?.featureFlags?.usingNewInterpreterStorage;
+
+		if (!usingNewInterpreterStorage) {
+			return undefined;
+		}
+
+		if (!extension.isActive) {
+			await extension.activate();
+		}
+		await extension.exports.ready;
+		const pythonPath = extension.exports.settings.getExecutionDetails(this.workspace.uri).execCommand[0];
+		return pythonPath;
+	}
+
 	async run(tests: string[]): Promise<void> {
 		this.output.clear()
 
+		const pythonExecutable = await this.getPythonExecutable();
+		if (!pythonExecutable) {
+			this.log.info("Python executable not found");
+			return;
+		}
 		this.log.info(`Running behave tests ${JSON.stringify(tests)}`);
 
 		this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: "started", tests });
@@ -74,6 +96,7 @@ export class BehaveAdapter implements TestAdapter {
 
 		if (this.testSuite != undefined){
 			await runTestSuite(
+				pythonExecutable,
 				this.testSuite, tests, this.testStatesEmitter,
 				this.output, this.featureDir
 			);

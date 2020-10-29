@@ -8,3 +8,5 @@ package-lock.json
 .devcontainer
 coverage
 *.vsix
+.npmrc
+test/fake-workspace/venv/

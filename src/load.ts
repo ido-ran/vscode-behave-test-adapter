@@ -1,15 +1,24 @@
 import { TestSuiteInfo, TestInfo } from "vscode-test-adapter-api";
 import { Option } from "./types";
 
+const convertToLinuxPath = function(path: string): string {
+    const linuxPath = path.replace(/\\/g, '/');
+    return linuxPath;
+}
 
-const loadTestSuite = async (featureRoot: string): Promise<TestSuiteInfo> => {
+const loadTestSuite = async (workspaceRoot: string, featureRoot: string): Promise<TestSuiteInfo> => {
     const fs = require("fs").promises;
     const fg = require("fast-glob");
+    // const path = require("path");
 
-    const featureFiles = await fg([featureRoot + "/**/*.feature"]);
+    const linuxFeatureRoot = convertToLinuxPath(featureRoot);
+    const featuresPattern = linuxFeatureRoot + "/**/*.feature";
+    const featureFiles = await fg([featuresPattern]);
+    // const featureFiles = featureFullPathFiles.map((fullPath: string) => 
+    //     convertToLinuxPath(path.relative(workspaceRoot, fullPath)));
 
     let promises = featureFiles.map( async (f: string) =>
-        grepTestSuite(await fs.readFile(f, "utf-8"))
+        grepTestSuite(f, await fs.readFile(f, "utf-8"))
     );
 
     let children: Option<TestInfo>[] = await Promise.all(promises);
@@ -23,7 +32,7 @@ const loadTestSuite = async (featureRoot: string): Promise<TestSuiteInfo> => {
 }
 
 
-const grepTestSuite = (text: string): Option<TestSuiteInfo> => {
+const grepTestSuite = (filePath: string, text: string): Option<TestSuiteInfo> => {
     const feature = grepFeatureFrom(text);
 
     if (feature === undefined) return undefined;
@@ -32,7 +41,9 @@ const grepTestSuite = (text: string): Option<TestSuiteInfo> => {
         type: "suite" as const,
         id: feature,
         label: "F: " + feature,
-        children: testsFrom(feature, text)
+        file: filePath,
+        debuggable: true,
+        children: testsFrom(filePath, feature, text)
     }
 }
 
@@ -49,11 +60,11 @@ const grepFeatureFromLines = (lines: string[]): Option<string> => {
 }
 
 
-const testsFrom = (feature: string, text: string) =>
-    testsFromLines(feature, text.split("\n"))
+const testsFrom = (filePath: string, feature: string, text: string) =>
+    testsFromLines(filePath, feature, text.split("\n"))
 
 
-const testsFromLines = (feature: string, lines: string[]): TestInfo[] => {
+const testsFromLines = (filePath: string, feature: string, lines: string[]): TestInfo[] => {
 
     const scenarios = filterMap<string, string>(lines, grepScenario);
     const scenariosOutlines = filterMap<string, string>(lines, grepScenarioOutline);
@@ -62,7 +73,9 @@ const testsFromLines = (feature: string, lines: string[]): TestInfo[] => {
         return {
             type: "test" as const,
             id: `${feature}:${s}`,
-            label: "S: " + s
+            label: "S: " + s,
+            file: filePath,
+            debuggable: true,
         }
     })
 
@@ -70,7 +83,9 @@ const testsFromLines = (feature: string, lines: string[]): TestInfo[] => {
         return {
             type: "test" as const,
             id: `${feature}:${s}`,
-            label: "SO: " + s
+            label: "SO: " + s,
+            file: filePath,
+            debuggable: true,
         }
     })
 
