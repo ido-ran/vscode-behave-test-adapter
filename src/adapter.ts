@@ -4,7 +4,7 @@ import { TestAdapter, TestLoadStartedEvent, TestLoadFinishedEvent,
 	TestSuiteInfo
 } from "vscode-test-adapter-api";
 import { Log } from "vscode-test-adapter-util";
-import runTestSuite from "./run";
+import { runTestSuite, debugTest } from "./run";
 import loadTestSuite from "./load";
 import { Option, TestEventsAfterLoad, TestLoadEvents } from "./types";
 
@@ -103,7 +103,12 @@ export class BehaveAdapter implements TestAdapter {
 		}
 
 		this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: "finished" });
+	}
 
+	async debug(tests: string[]): Promise<void> {
+		if (this.testSuite != undefined){
+			debugTest(this.testSuite, tests[0], this.workspace, this.output);
+		}
 	}
 
 	cancel(): void {

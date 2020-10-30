@@ -12,7 +12,7 @@ const runTestSuite = async (
 	featureDir: string
 ): Promise<void> => {
 
-	tests.forEach( async name => {
+	tests.forEach(async name => {
 		let node = findNode(testSuite, name);
 		if (node != undefined) {
 			await runTest(pythonExec, node, testStatesEmitter, output, featureDir)
@@ -20,6 +20,40 @@ const runTestSuite = async (
 	})
 }
 
+const debugTest = async (
+	testSuite: TestSuiteInfo,
+	test: string,
+	workspace: vscode.WorkspaceFolder,
+	output: vscode.OutputChannel
+): Promise<void> => {
+
+	const node = findNode(testSuite, test);
+	if (node && node.type == "test") {
+		const scenarioName = node.id.split(":")[1];
+
+		try {
+			await vscode.debug.startDebugging(workspace,
+				{
+					name: "debug-behave",
+					type: 'python',
+					request: 'launch',
+					console: 'internalConsole',
+					justMyCode: true,
+					module: "behave",
+					args: [
+						node.file,
+						"-n",
+						scenarioName
+					]
+				});
+		} catch (exception) {
+			output.clear();
+			output.appendLine(`Failed to start debugging tests: ${exception}`);
+			output.show();
+		}
+
+	}
+}
 
 const runTest = async (
 	pythonExec: string,
@@ -46,8 +80,8 @@ const runTest = async (
 		const { spawn } = require("child_process");
 
 		const scenarioName = node.id.split(":")[1];
-		const behaveArgs = [ "-m", "behave", node.file, "-n",  scenarioName];
-		
+		const behaveArgs = ["-m", "behave", node.file, "-n", scenarioName];
+
 		const child = await spawn(
 			pythonExec, behaveArgs, {
 			cwd: featureDir
@@ -87,4 +121,4 @@ const findNode = (searchNode: AllTest, id: string): Option<AllTest> => {
 	return undefined;
 }
 
-export default runTestSuite;
+export { runTestSuite, debugTest };

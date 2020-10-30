@@ -6,7 +6,7 @@ interface LineInFile {
     line: number;
 }
 
-const convertToLinuxPath = function(path: string): string {
+const convertToLinuxPath = function (path: string): string {
     const linuxPath = path.replace(/\\/g, '/');
     return linuxPath;
 }
@@ -14,26 +14,23 @@ const convertToLinuxPath = function(path: string): string {
 const loadTestSuite = async (workspaceRoot: string, featureRoot: string): Promise<TestSuiteInfo> => {
     const fs = require("fs").promises;
     const fg = require("fast-glob");
-    // const path = require("path");
 
     const linuxFeatureRoot = convertToLinuxPath(featureRoot);
     const featuresPattern = linuxFeatureRoot + "/**/*.feature";
     const featureFiles = await fg([featuresPattern]);
-    // const featureFiles = featureFullPathFiles.map((fullPath: string) => 
-    //     convertToLinuxPath(path.relative(workspaceRoot, fullPath)));
 
-    let promises = featureFiles.map( async (f: string) =>
+    const promises = featureFiles.map(async (f: string) =>
         grepTestSuite(f, await fs.readFile(f, "utf-8"))
     );
 
-    let children: Option<TestInfo>[] = await Promise.all(promises);
+    const children: Option<TestInfo>[] = await Promise.all(promises);
 
-    return Promise.resolve<TestSuiteInfo>( {
+    return Promise.resolve<TestSuiteInfo>({
         type: "suite",
         id: "root",
         label: "behave",
         children: filter(children)
-    } )
+    })
 }
 
 
@@ -47,7 +44,7 @@ const grepTestSuite = (filePath: string, text: string): Option<TestSuiteInfo> =>
         id: feature.text,
         label: "F: " + feature.text,
         file: filePath,
-        debuggable: true,
+        debuggable: false,
         children: testsFrom(filePath, feature.text, text)
     }
 }
@@ -108,7 +105,7 @@ const testsFromLines = (filePath: string, feature: string, lines: string[]): Tes
 function filterMap<A, B>(arr: A[], f: (x: A, index: number) => Option<B>): B[] {
     let init: B[] = [];
 
-    return arr.reduce( (acc, it, index) => {
+    return arr.reduce((acc, it, index) => {
         let val = f(it, index);
         if (val != undefined) {
             acc.push(val);
@@ -120,7 +117,7 @@ function filterMap<A, B>(arr: A[], f: (x: A, index: number) => Option<B>): B[] {
 
 function filter<T>(arr: Option<T>[]): T[] {
     let init: T[] = [];
-    return arr.reduce( (acc, it) => {
+    return arr.reduce((acc, it) => {
         if (it != undefined) {
             acc.push(it);
         }
