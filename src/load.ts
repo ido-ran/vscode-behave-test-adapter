@@ -1,6 +1,11 @@
 import { TestSuiteInfo, TestInfo } from "vscode-test-adapter-api";
 import { Option } from "./types";
 
+interface LineInFile {
+    text: string;
+    line: number;
+}
+
 const convertToLinuxPath = function(path: string): string {
     const linuxPath = path.replace(/\\/g, '/');
     return linuxPath;
@@ -39,53 +44,60 @@ const grepTestSuite = (filePath: string, text: string): Option<TestSuiteInfo> =>
 
     return {
         type: "suite" as const,
-        id: feature,
-        label: "F: " + feature,
+        id: feature.text,
+        label: "F: " + feature.text,
         file: filePath,
         debuggable: true,
-        children: testsFrom(filePath, feature, text)
+        children: testsFrom(filePath, feature.text, text)
     }
 }
 
+const SPLIT_LINE_REGEX = /\r\n|\r|\n/;
 
-const grepFeatureFrom = (text: string) => grepFeatureFromLines(text.split("\n"))
+const grepFeatureFrom = (text: string) => grepFeatureFromLines(text.split(SPLIT_LINE_REGEX))
 
 
-const grepFeatureFromLines = (lines: string[]): Option<string> => {
-    for (let line of lines) {
-        let feature = grepFeature(line);
-        if (feature != undefined) return feature;
+const grepFeatureFromLines = (lines: string[]): Option<LineInFile> => {
+    for (let line = 0; line < lines.length; line++) {
+        const text = lines[line];
+        const feature = grepFeature(text, line);
+        if (feature != undefined) {
+            return {
+                text: feature.text, line
+            };
+        };
     }
+
     return undefined
 }
 
 
 const testsFrom = (filePath: string, feature: string, text: string) =>
-    testsFromLines(filePath, feature, text.split("\n"))
+    testsFromLines(filePath, feature, text.split(SPLIT_LINE_REGEX))
 
 
 const testsFromLines = (filePath: string, feature: string, lines: string[]): TestInfo[] => {
 
-    const scenarios = filterMap<string, string>(lines, grepScenario);
-    const scenariosOutlines = filterMap<string, string>(lines, grepScenarioOutline);
+    const scenarios = filterMap<string, LineInFile>(lines, grepScenario);
+    const scenariosOutlines = filterMap<string, LineInFile>(lines, grepScenarioOutline);
 
-    const scenarioTests = scenarios.map(s => {
+    const scenarioTests = scenarios.map((s: LineInFile) => {
         return {
             type: "test" as const,
-            id: `${feature}:${s}`,
-            label: "S: " + s,
+            id: `${feature}:${s.text}`,
+            label: "S: " + s.text,
             file: filePath,
-            debuggable: true,
+            line: s.line,
         }
     })
 
-    const scenarioOutlineTests = scenariosOutlines.map(s => {
+    const scenarioOutlineTests = scenariosOutlines.map((s: LineInFile) => {
         return {
             type: "test" as const,
-            id: `${feature}:${s}`,
-            label: "SO: " + s,
+            id: `${feature}:${s.text}`,
+            label: "SO: " + s.text,
             file: filePath,
-            debuggable: true,
+            line: s.line,
         }
     })
 
@@ -93,11 +105,11 @@ const testsFromLines = (filePath: string, feature: string, lines: string[]): Tes
 }
 
 
-function filterMap<A, B>(arr: A[], f: (x: A) => Option<B>): B[] {
+function filterMap<A, B>(arr: A[], f: (x: A, index: number) => Option<B>): B[] {
     let init: B[] = [];
 
-    return arr.reduce( (acc, it) => {
-        let val = f(it);
+    return arr.reduce( (acc, it, index) => {
+        let val = f(it, index);
         if (val != undefined) {
             acc.push(val);
         }
@@ -117,18 +129,18 @@ function filter<T>(arr: Option<T>[]): T[] {
 }
 
 
-const grepFeature = (line: string) => grepPattern(line, "Feature:")
+const grepFeature = (text: string, line: number) => grepPattern(text, line, "Feature:")
 
-const grepScenario = (line: string) => grepPattern(line, "Scenario:")
+const grepScenario = (text: string, line: number) => grepPattern(text, line, "Scenario:")
 
-const grepScenarioOutline = (line: string) => grepPattern(line, "Scenario Outline:")
+const grepScenarioOutline = (text: string, line: number) => grepPattern(text, line, "Scenario Outline:")
 
 
-const grepPattern = (line: string, pattern: string): Option<string> => {
+const grepPattern = (text: string, line: number, pattern: string): Option<LineInFile> => {
     let regex = new RegExp("\\s*" + pattern + "\\s*(.*\\w)", "g");
-    let ok = regex.exec(line);
+    let ok = regex.exec(text);
     if (ok) {
-        return ok[1]
+        return { text: ok[1], line }
     } else {
         return undefined
     }

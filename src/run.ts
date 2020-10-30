@@ -45,8 +45,11 @@ const runTest = async (
 
 		const { spawn } = require("child_process");
 
+		const scenarioName = node.id.split(":")[1];
+		const behaveArgs = [ "-m", "behave", node.file, "-n",  scenarioName];
+		
 		const child = await spawn(
-			pythonExec, [ "-m", "behave", node.file, "-n", node.id.split(":")[1] ], {
+			pythonExec, behaveArgs, {
 			cwd: featureDir
 		});
 
